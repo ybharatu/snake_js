@@ -61,7 +61,8 @@ function driver() {
 	// Vertical velocity
 	dy = 0;
 
-	score = 0
+	score = 0;
+	document.getElementById('score').innerHTML = score;
 	main();
 	gen_food();
 }
