@@ -7,6 +7,7 @@ const head_col = 'yellow'
 const head_border = 'darkyellow'
 
 const newGameButton = document.querySelector('#new_game');
+const showGridButton = document.querySelector('#show_grid');
 
 let snake = [  {x: 200, y: 200},  {x: 190, y: 200},  {x: 180, y: 200},  {x: 170, y: 200},  {x: 160, y: 200},];
 
@@ -22,6 +23,15 @@ let food_y;
 
 let score = 0
 
+// Box width
+var bw = 400;
+// Box height
+var bh = 400;
+// Padding
+var p = 0;
+
+let grid_show = 0;
+
 // Get the canvas element
 const snakeboard = document.getElementById("snakeboard");
 // Return a two dimensional drawing context
@@ -32,6 +42,7 @@ const snakeboard_ctx = snakeboard.getContext("2d");
 // gen_food();
 clear_board();
 newGameButton.addEventListener('click', driver);
+showGridButton.addEventListener('click', changeGrid);
 
 document.addEventListener("keydown", change_direction);
 window.addEventListener("keydown", function(e) {
@@ -61,6 +72,7 @@ function main() {
         changing_direction = false;
         setTimeout(function onTick() {
         clear_board();
+        gridBoard();
         drawFood();
         move_snake();
         drawSnake();
@@ -213,6 +225,33 @@ function move_snake() {
     // Remove the last part of snake body
     snake.pop();
   }
+}
+
+//found from https://stackoverflow.com/questions/11735856/draw-a-grid-on-an-html-5-canvas-element
+function gridBoard(){
+	if(grid_show){
+		for (var x = 0; x <= bw; x += 10) {
+	        snakeboard_ctx.moveTo(0.5 + x + p, p);
+	        snakeboard_ctx.lineTo(0.5 + x + p, bh + p);
+	    }
+
+	    for (var x = 0; x <= bh; x += 10) {
+	        snakeboard_ctx.moveTo(p, 0.5 + x + p);
+	        snakeboard_ctx.lineTo(bw + p, 0.5 + x + p);
+	    }
+	    snakeboard_ctx.strokeStyle = "white";
+	    snakeboard_ctx.stroke();
+	}
+    
+}
+
+function changeGrid(){
+	console.log("Changed Grid")
+	if (grid_show === 1){
+		grid_show = 0;
+	}else{
+		grid_show = 1;
+	}
 }
 
 // document.addEventListener("DOMContentLoaded", function () {
