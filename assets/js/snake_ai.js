@@ -1,4 +1,45 @@
 // Used this as the base: https://www.educative.io/blog/javascript-snake-game-tutorial
+
+// class Node{
+//   constructor(coord ,visited, left, right, up, down){
+//     this.coord = coord;
+//     this.visited = visited;
+//     this.left = left;
+//     this.right = right;
+//     this.up = up;
+//     this.down = down;
+//   }
+// }
+
+// class Path{
+//   constructor(height, width){
+//     this.height = height;
+//     this.width = width;
+//     this.length = 0;
+//     this.path = [];
+//     this.init_path();
+//   }
+
+//   get_height(){
+//     return this.height;
+//   }
+
+//   get_width(){
+//     return this.width;
+//   }
+
+//   get_path(){
+//     return this.path;
+//   }
+
+//   // Good resource: https://weblog.jamisbuck.org/2011/1/10/maze-generation-prim-s-algorithm
+//   init_path(){
+//     // Making the start point the head of the snake. NEEED TO CHANGE if snake gets relocated
+//     this.path[this.length] = new Node({x: 100, y: 100},1, 1, 1, 1, 1);
+//     this.length = this.length + 1;
+//   }
+// }
+// Another Good resource: https://github.com/CheranMahalingam/Snake_Hamiltonian_Cycle_Solver/blob/master/
 const board_border = 'white';
 const board_background = "black";
 const snake_col = 'lightgreen';
@@ -8,9 +49,19 @@ const head_border = 'darkyellow'
 
 const newGameButton = document.querySelector('#new_game_ai');
 const showGridButton = document.querySelector('#show_grid_ai');
+const showNumButton = document.querySelector('#show_num_ai');
 
-let snake = [  {x: 200, y: 200},  {x: 190, y: 200},  {x: 180, y: 200},  {x: 170, y: 200},  {x: 160, y: 200},];
+// Get the canvas element
+const snakeboard = document.getElementById("snakeboard_comp");
+// Return a two dimensional drawing context
+const snakeboard_ctx = snakeboard.getContext("2d");
 
+// Box width
+var bw = 100;
+// Box height
+var bh = 100;
+// Padding
+var p = 0;
 // True if changing direction
 let changing_direction = false;
 // Horizontal velocity
@@ -18,34 +69,33 @@ let dx = 10;
 // Vertical velocity
 let dy = 0;
 
+let snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
+
+
+
 let food_x;
 let food_y;
 
 let score = 0
 
-// Box width
-var bw = 400;
-// Box height
-var bh = 400;
-// Padding
-var p = 0;
-
 let grid_show = 0;
 
-let board = makeArray(40,40,0)
+let num_show = 0;
 
-// Get the canvas element
-const snakeboard = document.getElementById("snakeboard_comp");
-// Return a two dimensional drawing context
-const snakeboard_ctx = snakeboard.getContext("2d");
+//let board = makeArray(40,40,0)
+
+
+
+// let ham_path = new Path(snakeboard.height/2, snakeboard.width/2);
+// console.log(ham_path.get_path())
 // Start game
 // main();
 
 // gen_food();
 clear_board();
-console.log(board);
 newGameButton.addEventListener('click', driver);
 showGridButton.addEventListener('click', changeGrid);
+showNumButton.addEventListener('click', changeNum);
 
 document.addEventListener("keydown", change_direction);
 window.addEventListener("keydown", function(e) {
@@ -55,7 +105,7 @@ window.addEventListener("keydown", function(e) {
 }, false);
 
 function driver() {
-	snake = [  {x: 200, y: 200},  {x: 190, y: 200},  {x: 180, y: 200},  {x: 170, y: 200},  {x: 160, y: 200},];
+  snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
 
 	// True if changing direction
 	changing_direction = false;
@@ -64,7 +114,8 @@ function driver() {
 	// Vertical velocity
 	dy = 0;
 
-	score = 0
+	score = 0;
+  document.getElementById('score').innerHTML = score;
 	main();
 	gen_food();
 }
@@ -76,6 +127,7 @@ function main() {
         setTimeout(function onTick() {
         clear_board();
         gridBoard();
+        numBoard();
         drawFood();
         move_snake();
         drawSnake();
@@ -233,19 +285,48 @@ function move_snake() {
 //found from https://stackoverflow.com/questions/11735856/draw-a-grid-on-an-html-5-canvas-element
 function gridBoard(){
   //console.log("Toggle Grid")
+  var count = 0;
 	if(grid_show){
-		for (var x = 0; x <= bw; x += 10) {
+		for (var x = 0; x <= snakeboard.width; x += 10) {
 	        snakeboard_ctx.moveTo(0.5 + x + p, p);
-	        snakeboard_ctx.lineTo(0.5 + x + p, bh + p);
+	        snakeboard_ctx.lineTo(0.5 + x + p, snakeboard.height + p);
+          // snakeboard_ctx.font = "10px Arial";
+          // snakeboard_ctx.fillStyle = "red";
+          // snakeboard_ctx.fillText("1", 102, 100);
 	    }
 
-	    for (var x = 0; x <= bh; x += 10) {
+	    for (var x = 0; x <= snakeboard.height; x += 10) {
 	        snakeboard_ctx.moveTo(p, 0.5 + x + p);
-	        snakeboard_ctx.lineTo(bw + p, 0.5 + x + p);
+	        snakeboard_ctx.lineTo(snakeboard.width + p, 0.5 + x + p);
 	    }
 	    snakeboard_ctx.strokeStyle = "white";
 	    snakeboard_ctx.stroke();
 	}
+    
+}
+
+function numBoard(){
+  //console.log("Toggle Grid")
+  var count = 0;
+  if(num_show){
+    for (var y = 0; y <= snakeboard.height - 1; y += 10) {
+          
+      for (var x = 0; x <= snakeboard.height - 1; x += 10) {
+          
+          if (count < (100) ){
+            if (count === 10){
+              console.log(x + 2 + " " + y + 8);
+            }
+            snakeboard_ctx.font = "7px Arial";
+            snakeboard_ctx.fillStyle = "red";
+            snakeboard_ctx.fillText(count, x + 2, y + 8);
+            count = count + 1;
+          }
+          
+          //console.log(count);
+      }
+    }
+  }
     
 }
 
@@ -258,6 +339,19 @@ function changeGrid(){
 	}
   clear_board();
   gridBoard();
+  numBoard();
+}
+
+function changeNum(){
+  //console.log("Changed Grid")
+  if (num_show === 1){
+    num_show = 0;
+  }else{
+    num_show = 1;
+  }
+  clear_board();
+  gridBoard();
+  numBoard();
 }
 
 // Found from https://stackoverflow.com/questions/13808325/creating-a-2d-array-with-specific-length-and-width
@@ -271,6 +365,8 @@ function makeArray(w, h, val) {
     }
     return arr;
 }
+
+
 
 // document.addEventListener("DOMContentLoaded", function () {
 //   pTag = document.querySelector("div");
