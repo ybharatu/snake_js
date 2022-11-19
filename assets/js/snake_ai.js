@@ -71,7 +71,7 @@ let dy = 0;
 
 let snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
 
-
+grid_margin = 20
 
 let food_x;
 let food_y;
@@ -103,6 +103,8 @@ window.addEventListener("keydown", function(e) {
         e.preventDefault();
     }
 }, false);
+
+prim_maze();
 
 function driver() {
   snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
@@ -287,7 +289,7 @@ function gridBoard(){
   //console.log("Toggle Grid")
   var count = 0;
 	if(grid_show){
-		for (var x = 0; x <= snakeboard.width; x += 10) {
+		for (var x = 0; x <= snakeboard.width; x += grid_margin) {
 	        snakeboard_ctx.moveTo(0.5 + x + p, p);
 	        snakeboard_ctx.lineTo(0.5 + x + p, snakeboard.height + p);
           // snakeboard_ctx.font = "10px Arial";
@@ -295,7 +297,7 @@ function gridBoard(){
           // snakeboard_ctx.fillText("1", 102, 100);
 	    }
 
-	    for (var x = 0; x <= snakeboard.height; x += 10) {
+	    for (var x = 0; x <= snakeboard.height; x += grid_margin) {
 	        snakeboard_ctx.moveTo(p, 0.5 + x + p);
 	        snakeboard_ctx.lineTo(snakeboard.width + p, 0.5 + x + p);
 	    }
@@ -309,9 +311,9 @@ function numBoard(){
   //console.log("Toggle Grid")
   var count = 0;
   if(num_show){
-    for (var y = 0; y <= snakeboard.height - 1; y += 10) {
+    for (var y = 0; y <= snakeboard.height - 1; y += grid_margin) {
           
-      for (var x = 0; x <= snakeboard.height - 1; x += 10) {
+      for (var x = 0; x <= snakeboard.height - 1; x += grid_margin) {
           
           if (count < (100) ){
             if (count === 10){
@@ -364,6 +366,134 @@ function makeArray(w, h, val) {
         }
     }
     return arr;
+}
+
+
+// Referenced: https://github.com/CheranMahalingam/Snake_Hamiltonian_Cycle_Solver/blob/master/
+// Use Prim's algorithm to create a maze
+function prim_maze(){
+  // Calculate all verticies. Needs to be half the size of the original board. 
+  num_rows = snakeboard.height/10/2;
+  num_cols = snakeboard.width/10/2;
+  num_vert = num_cols * num_rows;
+
+  directions = {};
+  visited = {};
+
+  // Key Generation
+  for (var y = 0; y <= num_rows; y++){
+    for (var x = 0; x <= num_cols; x++){
+      directions[y,x] = [];
+    }
+  }
+
+  init_x = Math.floor(Math.random() * num_cols); 
+  init_y = Math.floor(Math.random() * num_rows); 
+
+  curr_x = init_x;
+  curr_y = init_y;
+  console.log(curr_x);
+  console.log(curr_y);
+
+  // Need to keep track of visited points
+  visited[x, y] = 1;
+
+  // Found from https://stackoverflow.com/questions/63179867/set-of-tuples-in-javascript
+  class ObjectSet extends Set{
+    add(elem){
+      return super.add(typeof elem === 'object' ? JSON.stringify(elem) : elem);
+    }
+    has(elem){
+    return super.has(typeof elem === 'object' ? JSON.stringify(elem) : elem);
+    }
+  }
+
+  // Need to keep track of adjacent points
+  let adjacent = new ObjectSet();
+
+  //while (Object.keys(visited).length != num_vert){
+
+    // Need to list all the cases to check adjacent cells
+
+    // Case #1: Not on any edge of the board. Have neighbors above, below, right, and left of you
+    if (curr_x != 0 && curr_y != 0 && curr_x != num_cols - 1 && curr_y != num_rows - 1){
+      //adjacent.add({x: curr_x, y: curr_y })
+      // Right neighbor
+      adjacent.add([curr_x + 1, curr_y ]);
+      // Left neighbor
+      adjacent.add([curr_x - 1, curr_y ]);
+      // Above neighbor
+      adjacent.add([curr_x , curr_y - 1]);
+      // Below neighbor
+      adjacent.add([curr_x , curr_y + 1 ]);
+    }
+    // Case #2: Top left corner. Have neighbors below, and right of you
+    else if (curr_x === 0 && curr_y === 0 ){
+      // Right neighbor
+      adjacent.add([curr_x + 1, curr_y ]);
+      // Below neighbor
+      adjacent.add([curr_x, curr_y + 1 ]);
+    }
+    // Case #3: Top Right corner. Have neighbors below, and left of you
+    else if (curr_x === num_cols - 1 && curr_y === 0 ){
+      // Below neighbor
+      adjacent.add([curr_x, curr_y + 1 ]);
+      // Left neighbor
+      adjacent.add([curr_x - 1, curr_y ]);
+    }
+    // Case #4: Bottom Right corner. Have neighbors above, and left of you
+    else if (curr_x === num_cols - 1 && curr_y === num_rows - 1 ){
+      // Above neighbor
+      adjacent.add([curr_x , curr_y - 1]);
+      // Left neighbor
+      adjacent.add([curr_x - 1, curr_y ]);
+    }
+    // Case #5: Bottom Left corner. Have neighbors above, and right of you
+    else if (curr_x === 0 && curr_y === num_rows - 1 ){
+      // Above neighbor
+      adjacent.add([curr_x , curr_y - 1]);
+      // Right neighbor
+      adjacent.add([curr_x + 1, curr_y ]);
+    }
+    // Case #6: Left Edge. Have neighbors above, below, and right of you
+    else if (curr_x === 0 ){
+      // Above neighbor
+      adjacent.add([curr_x , curr_y - 1]);
+      // Right neighbor
+      adjacent.add([curr_x + 1, curr_y ]);
+      // Below neighbor
+      adjacent.add([curr_x, curr_y + 1 ]);
+    }
+    // Case #7: Right Edge. Have neighbors above, below, and left of you
+    else if (curr_x === num_cols - 1 ){
+      // Above neighbor
+      adjacent.add([curr_x , curr_y - 1]);
+      /// Left neighbor
+      adjacent.add([curr_x - 1, curr_y ]);
+      // Below neighbor
+      adjacent.add([curr_x, curr_y + 1 ]);
+    }
+    // Case #8: Top Edge. Have neighbors below, right and left of you
+    else if (curr_y === 0 ){
+      // Right neighbor
+      adjacent.add([curr_x + 1, curr_y ]);
+      /// Left neighbor
+      adjacent.add([curr_x - 1, curr_y ]);
+      // Below neighbor
+      adjacent.add([curr_x, curr_y + 1 ]);
+    }
+    // Case #9: Bottom Edge. Have neighbors above, right and left of you
+    else if (curr_y === num_rows - 1 ){
+      // Right neighbor
+      adjacent.add([curr_x + 1, curr_y ]);
+      /// Left neighbor
+      adjacent.add([curr_x - 1, curr_y ]);
+      // Above neighbor
+      adjacent.add([curr_x , curr_y - 1]);
+    }
+
+    console.log(adjacent);
+  //}
 }
 
 
