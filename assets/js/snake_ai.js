@@ -57,9 +57,9 @@ const snakeboard = document.getElementById("snakeboard_comp");
 const snakeboard_ctx = snakeboard.getContext("2d");
 
 // Box width
-var bw = 100;
+var bw = 120;
 // Box height
-var bh = 100;
+var bh = 120;
 // Padding
 var p = 0;
 // True if changing direction
@@ -368,6 +368,24 @@ function makeArray(w, h, val) {
     return arr;
 }
 
+function set_pop(s){
+  let value;
+  for(value of s);
+  return value;
+}
+
+function count_ones(arr){
+  count = 0;
+  for(let i = 0; i < arr.length;i++){
+    for(let j = 0; j < arr[0].length;j++){
+      if (arr[i][j] === 1){
+        count += 1;
+      }
+    }
+  }
+  return count;
+}
+
 
 // Referenced: https://github.com/CheranMahalingam/Snake_Hamiltonian_Cycle_Solver/blob/master/
 // Use Prim's algorithm to create a maze
@@ -377,26 +395,49 @@ function prim_maze(){
   num_cols = snakeboard.width/10/2;
   num_vert = num_cols * num_rows;
 
-  directions = {};
-  visited = {};
+  // directions = Array.from(Array(num_rows), () => new Array(num_cols));
+  // visited = Array.from(Array(num_rows), () => new Array(num_cols));
+  //directions = {}
+  //visited = {}
 
-  // Key Generation
-  for (var y = 0; y <= num_rows; y++){
-    for (var x = 0; x <= num_cols; x++){
-      directions[y,x] = [];
-    }
+// Got this from: https://stackoverflow.com/questions/966225/how-can-i-create-a-two-dimensional-array-in-javascript
+var directions = new Array(num_rows);
+var visited = new Array(num_rows);
+
+for (var i = 0; i < directions.length; i++) {
+  directions[i] = new Array(num_cols);
+  visited[i] = new Array(num_cols);
+}
+for (var i = 0; i < directions.length; i++){
+  for (var j = 0; j < directions[0].length; j++){
+    directions[i][j] = [];
+    visited[i][j] = 0;
   }
+}
+
+//console.log(visited);
+  // Key Generation
+  // for (var y = 0; y <= num_rows; y++){
+  //   for (var x = 0; x <= num_cols; x++){
+  //     directions[x][y] = [];
+  //     visited[x][y] = 0;
+  //   }
+  // }
 
   init_x = Math.floor(Math.random() * num_cols); 
   init_y = Math.floor(Math.random() * num_rows); 
 
   curr_x = init_x;
   curr_y = init_y;
+  new_x = curr_x;
+  new_y = curr_y;
+
+  console.log("Current pos:");
   console.log(curr_x);
   console.log(curr_y);
 
   // Need to keep track of visited points
-  visited[x, y] = 1;
+  visited[curr_x][curr_y] = 1;
 
   // Found from https://stackoverflow.com/questions/63179867/set-of-tuples-in-javascript
   class ObjectSet extends Set{
@@ -412,6 +453,10 @@ function prim_maze(){
   let adjacent = new ObjectSet();
 
   //while (Object.keys(visited).length != num_vert){
+  while(count_ones(visited) != num_vert){
+
+    curr_x = new_x;
+    curr_y = new_y;
 
     // Need to list all the cases to check adjacent cells
 
@@ -493,6 +538,51 @@ function prim_maze(){
     }
 
     console.log(adjacent);
+
+    while (true){
+
+      // Pick random adjacent cell to check. 
+      new_cell = set_pop(adjacent);
+      //console.log(new_cell);
+      
+      new_x = parseInt(new_cell.split(",")[0].split("[")[1],10);
+      new_y = parseInt(new_cell.split(",")[1].split("]")[0],10);
+      console.log(new_x + " " +  new_y);
+      //console.log(visited);
+      adjacent.delete(new_cell)   
+      //console.log(adjacent)
+      // Checks if a wall already exists. If it does, it will pick a new cell
+      if (visited[new_x][new_y] == 0) {
+
+        // Marks this location as visited
+        visited[new_x][new_y] = 1;
+
+        // Creating the wall. Check the adjacent cells until you find a visited cell. Then make a wall towards it. 
+        // Only consider walls to be the right or down
+        if (new_x+1 <= num_cols-1 && visited[new_x+1][new_y] == 1){
+          directions[new_x][new_y].push("right");
+        }
+        else if(new_x != 0 && visited[new_x-1][new_y] == 1){
+          directions[new_x-1][new_y].push("right");
+        }
+        else if(new_y+1 <= num_rows && visited[new_x][new_y+1] == 1){
+          directions[new_x][new_y].push("down");
+        }
+        else if(new_y != 0 && visited[new_x][new_y-1] == 1){
+          directions[new_x][new_y-1].push("down");
+        }
+        else{
+          console.log("Something went wrong in prim_maze()");
+        }
+
+        break;
+      }
+    }
+      console.log("num visited:");
+      console.log(count_ones(visited));
+      
+  }
+   console.log(directions); 
   //}
 }
 
