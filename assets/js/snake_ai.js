@@ -104,7 +104,8 @@ window.addEventListener("keydown", function(e) {
     }
 }, false);
 
-prim_maze();
+directions = prim_maze();
+generate_cycle(directions);
 
 function driver() {
   snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
@@ -391,8 +392,8 @@ function count_ones(arr){
 // Use Prim's algorithm to create a maze
 function prim_maze(){
   // Calculate all verticies. Needs to be half the size of the original board. 
-  num_rows = snakeboard.height/10/2;
-  num_cols = snakeboard.width/10/2;
+  num_rows = snakeboard.height/20/2;
+  num_cols = snakeboard.width/20/2;
   num_vert = num_cols * num_rows;
 
   // directions = Array.from(Array(num_rows), () => new Array(num_cols));
@@ -583,9 +584,70 @@ for (var i = 0; i < directions.length; i++){
       
   }
    console.log(directions); 
+   return directions;
   //}
 }
 
+function generate_cycle(directions){
+
+  num_rows = snakeboard.height/20/2;
+  num_cols = snakeboard.width/20/2;
+  num_vert = num_cols * num_rows;
+
+  // 2D Array that acts like a dictionary
+  // Key is the (x,y) location
+  // Value is the (x,y) locations it can travel to from the (x,y) location from key
+  var graph = new Array(num_rows*2);
+
+  for (var i = 0; i < graph.length; i++) {
+    graph[i] = new Array(num_cols*2);
+  }
+  for (var i = 0; i < graph.length; i++){
+    for (var j = 0; j < graph[0].length; j++){
+      graph[i][j] = [];
+    }
+  }
+
+  for (var i = 0; i < num_rows; i++){
+    for (var j = 0; j < num_cols; j++){
+      // Case #1: Not on any edge of the board. Have neighbors above, below, right, and left of you
+      if (j != num_cols - 1 && i != num_rows - 1 && j != 0 && i != 0){
+        if (directions[j][i].includes("right")){
+          graph[j*2 + 1][i*2].push([j*2 + 2, i*2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 2, i*2 + 1]);
+        } else{
+          graph[j*2 + 1][i*2].push([j*2 + 1, i*2]);
+        }
+
+        if (directions[j][i].includes("down")){
+          graph[j*2][i*2 + 1].push([j*2, i*2 + 2]);
+          if (graph[j*2 + 1][i*2 + 1] != []){
+            graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
+          }else{
+            graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
+          }
+        }else{
+          graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if (!(directions[j][i-1].includes("down"))){
+          graph[j*2][i*2].push([j*2 + 1, i*2]);
+        }
+
+        if (!(directions[j-1][i].includes("right"))){
+          if (graph[j*2][i*2] != []){
+            graph[j*2][i*2].push([j*2, i*2 + 1]);
+          }else{
+            graph[j*2][i*2].push([j*2, i*2 + 1]);
+          }
+        }
+
+      }
+
+    }
+  }
+  console.log(graph);
+}
 
 
 // document.addEventListener("DOMContentLoaded", function () {
