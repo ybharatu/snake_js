@@ -615,18 +615,14 @@ function generate_cycle(directions){
         if (directions[j][i].includes("right")){
           graph[j*2 + 1][i*2].push([j*2 + 2, i*2]);
           graph[j*2 + 1][i*2 + 1].push([j*2 + 2, i*2 + 1]);
-        } else{
-          graph[j*2 + 1][i*2].push([j*2 + 1, i*2]);
+        } else {
+          graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
         }
 
         if (directions[j][i].includes("down")){
           graph[j*2][i*2 + 1].push([j*2, i*2 + 2]);
-          if (graph[j*2 + 1][i*2 + 1] != []){
-            graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
-          }else{
-            graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
-          }
-        }else{
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
+        } else {
           graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
         }
 
@@ -635,11 +631,28 @@ function generate_cycle(directions){
         }
 
         if (!(directions[j-1][i].includes("right"))){
-          if (graph[j*2][i*2] != []){
             graph[j*2][i*2].push([j*2, i*2 + 1]);
-          }else{
-            graph[j*2][i*2].push([j*2, i*2 + 1]);
-          }
+        }
+
+      }
+
+      // Case #2: Top left corner. Have neighbors below, and right of you
+      else if (j == 0 && i == 0) {
+        graph[j*2][i*2].push([j*2 + 1, i*2]);
+        graph[j*2][i*2].push([j*2, i*2 + 1]);
+
+        if (directions[j][i].includes("right")){
+          graph[j*2 + 1][i*2].push([j*2 + 2, i*2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 2, i*2 + 1]);
+        } else {
+          graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if (directions[j][i].includes("down")){
+          graph[j*2][i*2 + 1].push([j*2, i*2 + 2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
+        } else {
+          graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
         }
 
       }
