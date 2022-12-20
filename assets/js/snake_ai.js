@@ -657,6 +657,39 @@ function generate_cycle(directions){
 
       }
 
+      // Case #3: Top Right corner. Have neighbors below, and left of you
+      else if (j == num_cols-1 && i == 0) {
+        //console.log("Got here? when j = " + j + " and i = " + i );
+        graph[j*2][i*2].push([j*2 + 1, i*2]);
+        graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
+
+        if (directions[j][i].includes("down")){
+          graph[j*2][i*2 + 1].push([j*2, i*2 + 2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
+        } else {
+          graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if(!(directions[j-1][i].includes("right"))){
+          graph[j*2][i*2].push([j*2,i*2 + 1]);
+        }
+
+      }
+
+      // Case #4: Bottom Right corner. Have neighbors above, and left of you
+      else if (j == num_cols-1 && i == 0) {
+        graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
+        graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
+
+        if(!(directions[j][i-1].includes("down"))){
+          graph[j*2][i*2].push([j*2,i*2 + 1]);
+        }
+        else if(!(directions[j-1][i].includes("right"))){
+          graph[j*2][i*2].push([j*2,i*2 + 1]);
+        }
+
+      }
+
     }
   }
   console.log(graph);
