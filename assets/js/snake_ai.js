@@ -105,7 +105,8 @@ window.addEventListener("keydown", function(e) {
 }, false);
 
 directions = prim_maze();
-generate_cycle(directions);
+graph = generate_cycle(directions);
+path = make_hamiltonian_path(graph);
 
 function driver() {
   snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
@@ -677,7 +678,7 @@ function generate_cycle(directions){
       }
 
       // Case #4: Bottom Right corner. Have neighbors above, and left of you
-      else if (j == num_cols-1 && i == 0) {
+      else if (j == num_cols-1 && i == num_rows - 1) {
         graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
         graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
 
@@ -690,9 +691,122 @@ function generate_cycle(directions){
 
       }
 
+      // Case #5: Bottom Left corner. Have neighbors above, and right of you
+      else if (j == 0 && i == num_rows-1){
+        graph[j*2][i*2].push([j*2 , i*2 + 1]);
+        graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
+
+        if (directions[j][i].includes("right")){
+          graph[j*2 + 1][i*2].push([j*2 + 2, i*2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 2, i*2 + 1]);
+        } else {
+          graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if(!(directions[j][i-1].includes("down"))){
+          graph[j*2][i*2].push([j*2 + 1,i*2 ]);
+        }
+
+      }
+
+      // Case #6: Left Edge. Have neighbors above, below, and right of you
+      else if(j == 0){
+        graph[j*2][i*2].push([j*2 , i*2 + 1]);
+
+        if (directions[j][i].includes("right")){
+          graph[j*2 + 1][i*2].push([j*2 + 2, i*2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 2, i*2 + 1]);
+        } else {
+          graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if (directions[j][i].includes("down")){
+          graph[j*2][i*2 + 1].push([j*2, i*2 + 2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
+        } else {
+          graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if(!(directions[j][i-1].includes("down"))){
+          graph[j*2][i*2].push([j*2 + 1,i*2 ]);
+        }
+
+      }
+
+      // Case #7: Right Edge. Have neighbors above, below, and left of you
+      else if(j == num_cols-1){
+        graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
+
+        if (directions[j][i].includes("down")){
+          graph[j*2][i*2 + 1].push([j*2, i*2 + 2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
+        } else {
+          graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if(!(directions[j][i-1].includes("down"))){
+          graph[j*2][i*2].push([j*2 + 1, i*2 ]);
+        }
+
+        if(!(directions[j-1][i].includes("right"))){
+          graph[j*2][i*2].push([j*2,i*2 + 1]);
+        }
+
+      }
+
+      // Case #8: Top Edge. Have neighbors below, right and left of you
+      else if(i == 0){
+        graph[j*2][i*2].push([j*2 + 1, i*2 ]);
+
+        if (directions[j][i].includes("right")){
+          graph[j*2 + 1][i*2].push([j*2 + 2, i*2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 2, i*2 + 1]);
+        } else {
+          graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if (directions[j][i].includes("down")){
+          graph[j*2][i*2 + 1].push([j*2, i*2 + 2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 1, i*2 + 2]);
+        } else {
+          graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if(!(directions[j-1][i].includes("right"))){
+          graph[j*2][i*2].push([j*2,i*2 + 1]);
+        }
+
+      }
+
+      // Case #9: Bottom Edge. Have neighbors above, right and left of you
+      else if( i == num_rows-1){
+        graph[j*2][i*2 + 1].push([j*2 + 1, i*2 + 1]);
+
+        if (directions[j][i].includes("right")){
+          graph[j*2 + 1][i*2].push([j*2 + 2, i*2]);
+          graph[j*2 + 1][i*2 + 1].push([j*2 + 2, i*2 + 1]);
+        } else {
+          graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
+        }
+
+        if(!(directions[j][i-1].includes("down"))){
+          graph[j*2][i*2].push([j*2 + 1, i*2 ]);
+        }
+
+        if(!(directions[j-1][i].includes("right"))){
+          graph[j*2][i*2].push([j*2,i*2 + 1]);
+        }
+
+      }
+
     }
   }
   console.log(graph);
+  return graph;
+}
+
+function make_hamiltonian_path (graph){
+  
 }
 
 
