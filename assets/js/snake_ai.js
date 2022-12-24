@@ -82,6 +82,10 @@ let grid_show = 0;
 
 let num_show = 0;
 
+num_rows = snakeboard.height/grid_margin/2;
+num_cols = snakeboard.width/grid_margin/2;
+num_vert = num_cols * num_rows;
+
 //let board = makeArray(40,40,0)
 
 
@@ -131,7 +135,7 @@ function main() {
         setTimeout(function onTick() {
         clear_board();
         gridBoard();
-        numBoard();
+        numPathBoard();
         drawFood();
         move_snake();
         drawSnake();
@@ -309,6 +313,8 @@ function gridBoard(){
     
 }
 
+
+
 function numBoard(){
   //console.log("Toggle Grid")
   var count = 0;
@@ -334,6 +340,19 @@ function numBoard(){
     
 }
 
+function numPathBoard(){
+  //console.log("Toggle Grid")
+  if(num_show){
+    for(var x = 0; x < num_vert; x += 1){
+      snakeboard_ctx.font = "7px Arial";
+      snakeboard_ctx.fillStyle = "red";
+      console.log(path[x]);
+      snakeboard_ctx.fillText(x, path[x][0]*grid_margin + 2, path[x][1]*grid_margin + 8);
+    }
+  }
+    
+}
+
 function changeGrid(){
 	//console.log("Changed Grid")
 	if (grid_show === 1){
@@ -343,7 +362,7 @@ function changeGrid(){
 	}
   clear_board();
   gridBoard();
-  numBoard();
+  numPathBoard();
 }
 
 function changeNum(){
@@ -355,7 +374,7 @@ function changeNum(){
   }
   clear_board();
   gridBoard();
-  numBoard();
+  numPathBoard();
 }
 
 // Found from https://stackoverflow.com/questions/13808325/creating-a-2d-array-with-specific-length-and-width
@@ -388,13 +407,23 @@ function count_ones(arr){
   return count;
 }
 
+// Found from here: https://stackoverflow.com/questions/41661287/how-to-check-if-an-array-contains-another-array
+function isArrayInArray(arr, item){
+  var item_as_string = JSON.stringify(item);
+
+  var contains = arr.some(function(ele){
+    return JSON.stringify(ele) === item_as_string;
+  });
+  return contains;
+}
+
 
 // Referenced: https://github.com/CheranMahalingam/Snake_Hamiltonian_Cycle_Solver/blob/master/
 // Use Prim's algorithm to create a maze
 function prim_maze(){
   // Calculate all verticies. Needs to be half the size of the original board. 
-  num_rows = snakeboard.height/20/2;
-  num_cols = snakeboard.width/20/2;
+  num_rows = snakeboard.height/grid_margin/2;
+  num_cols = snakeboard.width/grid_margin/2;
   num_vert = num_cols * num_rows;
 
   // directions = Array.from(Array(num_rows), () => new Array(num_cols));
@@ -591,8 +620,8 @@ for (var i = 0; i < directions.length; i++){
 
 function generate_cycle(directions){
 
-  num_rows = snakeboard.height/20/2;
-  num_cols = snakeboard.width/20/2;
+  num_rows = snakeboard.height/grid_margin/2;
+  num_cols = snakeboard.width/grid_margin/2;
   num_vert = num_cols * num_rows;
 
   // 2D Array that acts like a dictionary
@@ -683,10 +712,10 @@ function generate_cycle(directions){
         graph[j*2 + 1][i*2].push([j*2 + 1, i*2 + 1]);
 
         if(!(directions[j][i-1].includes("down"))){
-          graph[j*2][i*2].push([j*2,i*2 + 1]);
+          graph[j*2][i*2].push([j*2 + 1,i*2]);
         }
         else if(!(directions[j-1][i].includes("right"))){
-          graph[j*2][i*2].push([j*2,i*2 + 1]);
+          graph[j*2][i*2].push([j*2 ,i*2 + 1]);
         }
 
       }
@@ -806,7 +835,59 @@ function generate_cycle(directions){
 }
 
 function make_hamiltonian_path (graph){
-  
+  num_rows = snakeboard.height/grid_margin;
+  num_cols = snakeboard.width/grid_margin;
+  num_vert = num_cols * num_rows;
+
+  // Array that contains the ordered list of coordinates that compose of the path
+  var path = new Array();
+
+  path.push([0,0]);
+  prev_cell = path[0];
+  prev_x = path[0][0];
+  prev_y = path[0][1];
+  prev_direction = 'NONE';
+
+  // Generates a Hamiltonian Path by following these rules:
+  // 1. Can you go right? If so go right
+  // 2. Can you go down? If so go down
+  // 3. Can you go left? If so go left
+  // 4. Can you go up? If so go Up
+  // 5. It is not possible to reverse directions (left then right)
+  while(path.length != num_vert + 1){
+
+    console.log("READING: " + prev_x + " " + prev_y);
+    // console.log(graph[prev_x][prev_y]);
+    // console.log(isArrayInArray(graph[prev_x][prev_y], [prev_x +1, prev_y]));
+    // console.log(graph[prev_x][prev_y][0]);
+    // console.log([prev_x + 1, prev_y]);
+
+    if (graph[prev_x][prev_y].length != 0 && isArrayInArray(graph[prev_x][prev_y], [prev_x +1, prev_y]) && prev_direction != 'left'){
+      path.push([prev_x + 1, prev_y]);
+      prev_x = prev_x + 1;
+      prev_direction = 'right';
+    }
+    else if (graph[prev_x][prev_y].length != 0 && isArrayInArray(graph[prev_x][prev_y], [prev_x , prev_y + 1]) && prev_direction != 'up'){
+      path.push([prev_x, prev_y + 1]);
+      prev_y = prev_y + 1;
+      prev_direction = 'down';
+    }
+    else if (prev_x -1 != -1 && graph[prev_x - 1][prev_y].length != 0 && isArrayInArray(graph[prev_x - 1][prev_y], [prev_x , prev_y]) && prev_direction != 'right'){
+      path.push([prev_x - 1, prev_y]);
+      prev_x = prev_x - 1;
+      prev_direction = 'left';
+    }
+    else{
+      path.push([prev_x, prev_y - 1]);
+      prev_y = prev_y - 1;
+      prev_direction = 'up';
+    }
+
+  }
+
+  console.log(path);
+  return path;
+
 }
 
 
