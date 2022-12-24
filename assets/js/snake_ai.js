@@ -72,10 +72,10 @@ let dis = 20;
 let dy = 0;
 
 // Timing Delay
-delay = 1000;
+delay = 100;
 
 let snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
-
+let init_length = snake.length;
 grid_margin = 20
 
 let food_x;
@@ -86,6 +86,7 @@ let score = 0
 let grid_show = 0;
 
 let num_show = 0;
+let cur_idx = 0;
 
 num_rows = snakeboard.height/grid_margin/2;
 num_cols = snakeboard.width/grid_margin/2;
@@ -121,6 +122,9 @@ path = make_hamiltonian_path(graph);
 function driver() {
   //snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dis, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dis, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dis, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dis, y: snakeboard.height/2},];
   snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dis, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dis, y: snakeboard.height/2}, ];
+  init_length = snake.length;
+  // Find initial index of snake in path
+  cur_idx = get_initial_idx();
 
 	// True if changing direction
 	changing_direction = false;
@@ -146,6 +150,7 @@ function main() {
         drawFood();
         move_snake();
         drawSnake();
+
         // Call main again
         main();
       }, delay)
@@ -182,8 +187,12 @@ function drawSnake() {
 }
 
 function has_game_ended() {
+  //console.log(num_vert*10 - init_length*10);
+  if(score === num_vert*10 - init_length*10){
+    return true;
+  }
   for (let i = 4; i < snake.length; i++) {
-    if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true
+    if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
   }
   const hitLeftWall = snake[0].x < 0;
   const hitRightWall = snake[0].x > snakeboard.width - dx;
@@ -268,6 +277,7 @@ function random_food(min, max) {
 }
 
 function gen_food() {
+  if (has_game_ended()) return;
   // Generate a random number the food x-coordinate
   food_x = random_food(0, snakeboard.width - dx_2);
   // Generate a random number for the food y-coordinate
@@ -287,9 +297,32 @@ function drawFood()
       snakeboard_ctx.strokeRect(food_x, food_y, dx_2, dx_2);
 }
 
+function get_initial_idx(){
+  x_sn = snake[0].x / dx_2;
+  y_sn = snake[0].y / dx_2;
+  console.log("SNAKE HEAD: "+ x_sn + " " + y_sn);
+  for (let idx = 0; idx < path.length; idx += 1){
+    x_chk = path[idx][0];
+    y_chk = path[idx][1];
+    //console.log("Checking: " + x_chk + " " + y_chk);
+    if(x_chk === x_sn && y_chk === y_sn){
+      console.log(idx);
+      return idx;
+    }
+  }
+  return -1;
+}
+
 function move_snake() {
+
+  // New move snake logic using the hamiltonian path
+  // Get next coordinate using cur_idx
+  next_pos = path[(cur_idx+1)%(num_vert)];
+  //console.log(next_pos);
+  const head = {x: next_pos[0]*dx_2, y: next_pos[1]*dx_2};
+  cur_idx = (cur_idx+1)%(num_vert);
   // Create the new Snake's head
-  const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+  //const head = {x: snake[0].x + dx, y: snake[0].y + dy};
   // Add the new head to the beginning of snake body
   snake.unshift(head);
   const has_eaten_food = snake[0].x === food_x && snake[0].y === food_y;
