@@ -32,10 +32,10 @@
 //     return this.path;
 //   }
 
-//   // Good resource: https://weblog.jamisbuck.org/2011/1/10/maze-generation-prim-s-algorithm
+//   // Good resource: https://weblog.jamisbuck.org/2011/1/dx/maze-generation-prim-s-algorithm
 //   init_path(){
 //     // Making the start point the head of the snake. NEEED TO CHANGE if snake gets relocated
-//     this.path[this.length] = new Node({x: 100, y: 100},1, 1, 1, 1, 1);
+//     this.path[this.length] = new Node({x: dx0, y: dx0},1, 1, 1, 1, 1);
 //     this.length = this.length + 1;
 //   }
 // }
@@ -65,9 +65,12 @@ var p = 0;
 // True if changing direction
 let changing_direction = false;
 // Horizontal velocity
-let dx = 10;
+let dx = 20;
 // Vertical velocity
 let dy = 0;
+
+// Timing Delay
+delay = 100;
 
 let snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
 
@@ -118,7 +121,7 @@ function driver() {
 	// True if changing direction
 	changing_direction = false;
 	// Horizontal velocity
-	dx = 10;
+	dx = dx;
 	// Vertical velocity
 	dy = 0;
 
@@ -141,7 +144,7 @@ function main() {
         drawSnake();
         // Call main again
         main();
-      }, 100)
+      }, delay)
     }
 
 // draw a border around the canvas
@@ -179,9 +182,9 @@ function has_game_ended() {
     if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true
   }
   const hitLeftWall = snake[0].x < 0;
-  const hitRightWall = snake[0].x > snakeboard.width - 10;
+  const hitRightWall = snake[0].x > snakeboard.width - dx;
   const hitToptWall = snake[0].y < 0;
-  const hitBottomWall = snake[0].y > snakeboard.height - 10;
+  const hitBottomWall = snake[0].y > snakeboard.height - dx;
   return hitLeftWall || hitRightWall || hitToptWall || hitBottomWall
 }
 
@@ -196,25 +199,25 @@ function change_direction(event) {
   if (changing_direction) return;
   changing_direction = true;
   const keyPressed = event.keyCode;
-  const goingUp = dy === -10;
-  const goingDown = dy === 10;
-  const goingRight = dx === 10;
-  const goingLeft = dx === -10;
+  const goingUp = dy === -dx;
+  const goingDown = dy === dx;
+  const goingRight = dx === dx;
+  const goingLeft = dx === -dx;
   if (keyPressed === LEFT_KEY && !goingRight) {
-    dx = -10;
+    dx = -dx;
     dy = 0;
   }
   if (keyPressed === UP_KEY && !goingDown) {
     dx = 0;
-    dy = -10;
+    dy = -dx;
   }
   if (keyPressed === RIGHT_KEY && !goingLeft) {
-    dx = 10;
+    dx = dx;
     dy = 0;
   }
   if (keyPressed === DOWN_KEY && !goingUp) {
     dx = 0;
-    dy = 10;
+    dy = dx;
   }
 }
 
@@ -227,9 +230,9 @@ function drawSnakePart(snakePart, i) {
     snakeboard_ctx.strokestyle = head_border;
     // Draw a "filled" rectangle to represent the snake part at the coordinates
     // the part is located
-    snakeboard_ctx.fillRect(snakePart.x, snakePart.y, 10, 10);
+    snakeboard_ctx.fillRect(snakePart.x, snakePart.y, dx, dx);
     // Draw a border around the snake part
-    snakeboard_ctx.strokeRect(snakePart.x, snakePart.y, 10, 10);
+    snakeboard_ctx.strokeRect(snakePart.x, snakePart.y, dx, dx);
   }
   else {
   	// Set the colour of the snake part
@@ -238,9 +241,9 @@ function drawSnakePart(snakePart, i) {
     snakeboard_ctx.strokestyle = snake_border;
     // Draw a "filled" rectangle to represent the snake part at the coordinates
     // the part is located
-    snakeboard_ctx.fillRect(snakePart.x, snakePart.y, 10, 10);
+    snakeboard_ctx.fillRect(snakePart.x, snakePart.y, dx, dx);
     // Draw a border around the snake part
-    snakeboard_ctx.strokeRect(snakePart.x, snakePart.y, 10, 10);
+    snakeboard_ctx.strokeRect(snakePart.x, snakePart.y, dx, dx);
   }
   
 }
@@ -248,14 +251,14 @@ function drawSnakePart(snakePart, i) {
 
 
 function random_food(min, max) {
-  return Math.round((Math.random() * (max-min) + min) / 10) * 10;
+  return Math.round((Math.random() * (max-min) + min) / dx) * dx;
 }
 
 function gen_food() {
   // Generate a random number the food x-coordinate
-  food_x = random_food(0, snakeboard.width - 10);
+  food_x = random_food(0, snakeboard.width - dx);
   // Generate a random number for the food y-coordinate
-  food_y = random_food(0, snakeboard.height - 10);
+  food_y = random_food(0, snakeboard.height - dx);
   // if the new food location is where the snake currently is, generate a new food location
   snake.forEach(function has_snake_eaten_food(part) {
     const has_eaten = part.x == food_x && part.y == food_y;
@@ -267,8 +270,8 @@ function drawFood()
 {
       snakeboard_ctx.fillStyle = 'red';
       snakeboard_ctx.strokestyle = 'darkred';
-      snakeboard_ctx.fillRect(food_x, food_y, 10, 10);
-      snakeboard_ctx.strokeRect(food_x, food_y, 10, 10);
+      snakeboard_ctx.fillRect(food_x, food_y, dx, dx);
+      snakeboard_ctx.strokeRect(food_x, food_y, dx, dx);
 }
 
 function move_snake() {
@@ -279,7 +282,7 @@ function move_snake() {
   const has_eaten_food = snake[0].x === food_x && snake[0].y === food_y;
   if (has_eaten_food) {
     // Increase score
-    score += 10;
+    score += dx;
     // Display score on screen
     document.getElementById('score').innerHTML = score;
     // Generate new food location
@@ -298,9 +301,9 @@ function gridBoard(){
 		for (var x = 0; x <= snakeboard.width; x += grid_margin) {
 	        snakeboard_ctx.moveTo(0.5 + x + p, p);
 	        snakeboard_ctx.lineTo(0.5 + x + p, snakeboard.height + p);
-          // snakeboard_ctx.font = "10px Arial";
+          // snakeboard_ctx.font = "dxpx Arial";
           // snakeboard_ctx.fillStyle = "red";
-          // snakeboard_ctx.fillText("1", 102, 100);
+          // snakeboard_ctx.fillText("1", dx2, dx0);
 	    }
 
 	    for (var x = 0; x <= snakeboard.height; x += grid_margin) {
@@ -323,8 +326,8 @@ function numBoard(){
           
       for (var x = 0; x <= snakeboard.height - 1; x += grid_margin) {
           
-          if (count < (100) ){
-            if (count === 10){
+          if (count < (num_vert) ){
+            if (count === dx){
               console.log(x + 2 + " " + y + 8);
             }
             snakeboard_ctx.font = "7px Arial";
@@ -346,7 +349,7 @@ function numPathBoard(){
     for(var x = 0; x < num_vert; x += 1){
       snakeboard_ctx.font = "7px Arial";
       snakeboard_ctx.fillStyle = "red";
-      console.log(path[x]);
+      //console.log(path[x]);
       snakeboard_ctx.fillText(x, path[x][0]*grid_margin + 2, path[x][1]*grid_margin + 8);
     }
   }
@@ -576,8 +579,8 @@ for (var i = 0; i < directions.length; i++){
       new_cell = set_pop(adjacent);
       //console.log(new_cell);
       
-      new_x = parseInt(new_cell.split(",")[0].split("[")[1],10);
-      new_y = parseInt(new_cell.split(",")[1].split("]")[0],10);
+      new_x = parseInt(new_cell.split(",")[0].split("[")[1],dx);
+      new_y = parseInt(new_cell.split(",")[1].split("]")[0],dx);
       console.log(new_x + " " +  new_y);
       //console.log(visited);
       adjacent.delete(new_cell)   
