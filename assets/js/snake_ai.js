@@ -121,7 +121,7 @@ path = make_hamiltonian_path(graph);
 
 function driver() {
   //snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dis, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dis, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dis, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dis, y: snakeboard.height/2},];
-  snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dis, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dis, y: snakeboard.height/2}, ];
+  snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },];
   init_length = snake.length;
   // Find initial index of snake in path
   cur_idx = get_initial_idx();
@@ -152,8 +152,9 @@ function main() {
         drawSnake();
 
         // Call main again
-        main();
+        //main();
       }, delay)
+
     }
 
 // draw a border around the canvas
@@ -313,11 +314,194 @@ function get_initial_idx(){
   return -1;
 }
 
+function get_idx(x_sn, y_sn){
+  //console.log("x_sn: " + x_sn);
+  //console.log("y_sn: " + y_sn);
+  for (let idx = 0; idx < path.length; idx += 1){
+    x_chk = path[idx][0];
+    y_chk = path[idx][1];
+    //console.log("Checking: " + x_chk + " " + y_chk);
+    if(x_chk === x_sn && y_chk === y_sn){
+      return idx;
+    }
+  }
+  return -1;
+}
+
+function get_distance_idx(idx0, idx1){
+  //console.log("idx0: " + idx0);
+  //console.log("idx1: " + idx1);
+  if(idx0 - idx1 < 0){
+    return (num_vert - idx1) + idx0;
+  }else{
+    return idx0 - idx1;
+  }
+}
+
+
+function set_pop(s){
+  let value;
+  for(value of s);
+  return value;
+}
+
+function get_adj_matrix(head_idx, tail_idx){
+
+  var adj_matrix = new Array(num_vert);
+
+  for (var i = 0; i < adj_matrix.length; i++) {
+    adj_matrix[i] = new Array(num_vert);
+  }
+
+  for (var i = 0; i < adj_matrix.length; i++){
+    for (var j = 0; j < adj_matrix[0].length; j++){
+      adj_matrix[i][j] = 0;
+    } 
+  }
+  console.log("HEAD: " + head_idx);
+  console.log("TAIL: " + tail_idx);
+
+
+  for(var i = 0; i < num_vert; i += 1){
+
+    // Check Left idx
+    if(path[i][0] - 1 >= 0){
+      j = get_idx(path[i][0] -1, path[i][1]);
+      console.log("LEFT: " + j);
+      if (head_idx < tail_idx && j >= head_idx && j <= tail_idx ){
+        console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+      }else if ( head_idx >= tail_idx && j > head_idx || j < tail_idx){
+        console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+      }
+    }
+    // Check Right idx
+    if(path[i][0] + 1 <= num_cols){
+      j = get_idx(path[i][0] + 1, path[i][1]);
+      if (head_idx <= tail_idx && j >= head_idx && j <= tail_idx ){
+        adj_matrix[i][j] = 1;
+      }else if ( head_idx > tail_idx && j >= head_idx || j <= tail_idx){
+        adj_matrix[i][j] = 1;
+      }
+    }
+    // Check Up idx
+    if(path[i][1] - 1 >= 0){
+      j = get_idx(path[i][0], path[i][1] - 1);
+      if (head_idx <= tail_idx && j >= head_idx && j <= tail_idx ){
+        adj_matrix[i][j] = 1;
+      }else if ( head_idx > tail_idx && j >= head_idx || j <= tail_idx){
+        adj_matrix[i][j] = 1;
+      }
+    }
+    // Check Down Idx
+    if(path[i][1] + 1 <= num_rows){
+      j = get_idx(path[i][0], path[i][1] + 1);
+      if (head_idx <= tail_idx && j >= head_idx && j <= tail_idx ){
+        adj_matrix[i][j] = 1;
+      }else if ( head_idx > tail_idx && j >= head_idx || j <= tail_idx){
+        adj_matrix[i][j] = 1;
+      }
+    }
+  }
+
+  console.log(adj_matrix);
+  return adj_matrix;
+}
+
+function find_path(head_idx, tail_idx, food_idx){
+  // Dijkstra’s
+  // Create shortest path tree set
+  // Found from https://stackoverflow.com/questions/63179867/set-of-tuples-in-javascript
+  class ObjectSet extends Set{
+    add(elem){
+      return super.add(typeof elem === 'object' ? JSON.stringify(elem) : elem);
+    }
+    has(elem){
+    return super.has(typeof elem === 'object' ? JSON.stringify(elem) : elem);
+    }
+  }
+
+  adj_matrix = get_adj_matrix(head_idx, tail_idx);
+
+  // Need to keep track of vertices included in the shortest-path tree
+  let spts = new ObjectSet();
+
+  // Assign a distance value to all vertices in the input graph.
+  var distances = new Array(num_vert);
+
+  // Found path between start_idx and end_idx (i and j)
+  var added = new Array(num_vert);
+
+  // Parent array to store shortest path tree
+  var parents = new Array(num_vert);
+
+  for (var i = 0; i < distances.length; i++) {
+    // directions[i] = new Array(num_vert);
+    // added[i] = new Array(num_vert);
+    distances[i] = 50000;
+    added[i] = false;
+  }
+
+  // i is start_idx
+  // j is end_idx
+  // for (var i = 0; i < distances.length; i++){
+  //   for (var j = 0; j < distances[0].length; j++){
+  //     distances[i][j] = 50000;
+  //     num_vert[i][j] = false;
+  //   } 
+  // }
+
+  // Set source distance to 0
+  distances[head_idx] = 0;
+
+  // Set source parent to -1, because starting vertex does not have parent
+  //parents[]
+
+  // Make it impossible to go through the body by only allowing x > head_idx and x < tail_idx
+  for(var i = tail_idx; i < head_idx; i += 1){
+    spts.add(path[i]);
+  }
+  // Add the source to the shortest path tree
+  spts.add(path[head_idx]);
+
+  head_x = path[head_idx][0];
+  head_y = path[head_idx][1];
+
+  food_idx = get_idx(food_x / dx_2, food_y / dx_2);
+
+  // Recursive function that goes through all verticies
+  // tree = []
+  // tree = find_tree(spts, head_idx, food_idx, tree);
+
+
+
+
+}
+
 function move_snake() {
 
   // New move snake logic using the hamiltonian path
   // Get next coordinate using cur_idx
-  next_pos = path[(cur_idx+1)%(num_vert)];
+  if(score > .5 * (num_vert*10 - init_length*10)){
+    next_pos = path[(cur_idx+1)%(num_vert)];
+  }else{
+    //console.log("Food idx: " + get_idx(food_x / dx_2, food_y / dx_2));
+    //console.log("Curr idx: " + cur_idx);
+    food_idx = get_idx(food_x / dx_2, food_y / dx_2);
+    dist_to_food = get_distance_idx(food_idx, cur_idx);
+    tail_idx = get_idx(snake.slice(-1)[0].x / dx_2, snake.slice(-1)[0].y / dx_2);
+    head_idx = get_idx(snake[0].x / dx_2, snake[0].y / dx_2);
+    // console.log(snake.slice(-1)[0].x + " " + snake.slice(-1)[0].y);
+    // console.log("Tail idx: " + tail_idx);
+    // console.log("Head idx: " + head_idx);
+    // console.log("Food idx: " + food_idx);
+    // console.log("Distance to Food: " + dist_to_food);
+    find_path(head_idx, tail_idx, food_idx);
+
+    next_pos = path[(cur_idx+1)%(num_vert)];
+  }
+  
   //console.log(next_pos);
   const head = {x: next_pos[0]*dx_2, y: next_pos[1]*dx_2};
   cur_idx = (cur_idx+1)%(num_vert);
@@ -438,11 +622,6 @@ function makeArray(w, h, val) {
     return arr;
 }
 
-function set_pop(s){
-  let value;
-  for(value of s);
-  return value;
-}
 
 function count_ones(arr){
   count = 0;
@@ -903,9 +1082,9 @@ function make_hamiltonian_path (graph){
   // 3. Can you go left? If so go left
   // 4. Can you go up? If so go Up
   // 5. It is not possible to reverse directions (left then right)
-  while(path.length != num_vert + 1){
+  while(path.length != num_vert ){
 
-    console.log("READING: " + prev_x + " " + prev_y);
+    //console.log("READING: " + prev_x + " " + prev_y);
     // console.log(graph[prev_x][prev_y]);
     // console.log(isArrayInArray(graph[prev_x][prev_y], [prev_x +1, prev_y]));
     // console.log(graph[prev_x][prev_y][0]);
