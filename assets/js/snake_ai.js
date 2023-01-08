@@ -724,7 +724,7 @@ function get_next_idx(parents, cur_idx, head_idx, iteration){
     //console.log("Returning: " + cur_idx);
     return cur_idx;
   }
-  if(iteration == 30){
+  if(iteration == num_vert){
     console.log("Iteration Limit: " + cur_idx + " at iteration " + iteration);
     return cur_idx;
   }
