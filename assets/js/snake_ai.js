@@ -44,8 +44,10 @@ const board_border = 'white';
 const board_background = "black";
 const snake_col = 'lightgreen';
 const snake_border = 'darkgreen';
-const head_col = 'yellow'
-const head_border = 'darkyellow'
+const head_col = 'yellow';
+const head_border = 'darkyellow';
+const head_col_2 = "lightgreen";
+const head_border_2 = "darkgreen";
 
 const newGameButton = document.querySelector('#new_game_ai');
 const showGridButton = document.querySelector('#show_grid_ai');
@@ -57,9 +59,9 @@ const snakeboard = document.getElementById("snakeboard_comp");
 const snakeboard_ctx = snakeboard.getContext("2d");
 
 // Box width
-var bw = 120;
+var bw = 200;
 // Box height
-var bh = 120;
+var bh = 200;
 // Padding
 var p = 0;
 // True if changing direction
@@ -72,7 +74,7 @@ let dis = 20;
 let dy = 0;
 
 // Timing Delay
-delay = 100;
+delay = 200;
 
 let snake = [  {x: snakeboard.width/2 , y: snakeboard.height/2 },  {x: snakeboard.width/2 - dx, y: snakeboard.height/2},  {x: snakeboard.width/2-2*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-3*dx, y: snakeboard.height/2},  {x: snakeboard.width/2-4*dx, y: snakeboard.height/2},];
 let init_length = snake.length;
@@ -87,6 +89,8 @@ let grid_show = 0;
 
 let num_show = 0;
 let cur_idx = 0;
+
+let follow_path = 0;
 
 num_rows = snakeboard.height/grid_margin/2;
 num_cols = snakeboard.width/grid_margin/2;
@@ -150,9 +154,18 @@ function main() {
         drawFood();
         move_snake();
         drawSnake();
+        // if(score === 10) {
+        //   clear_board();
+        //   gridBoard();
+        //   numPathBoard();
+        //   drawFood();
+        //   move_snake();
+        //   drawSnake();
+        //   return;
+        // }
 
         // Call main again
-        //main();
+        main();
       }, delay)
 
     }
@@ -207,7 +220,8 @@ function start_new_game(event){
   const SPACE = 32;
 
   if(keyPressed === SPACE){
-    driver();
+    //driver();
+    main();
   }
 }
 
@@ -251,6 +265,17 @@ function drawSnakePart(snakePart, i) {
     snakeboard_ctx.fillStyle = head_col;
     // Set the border colour of the snake part
     snakeboard_ctx.strokestyle = head_border;
+    // Draw a "filled" rectangle to represent the snake part at the coordinates
+    // the part is located
+    snakeboard_ctx.fillRect(snakePart.x, snakePart.y, dx_2, dx_2);
+    // Draw a border around the snake part
+    snakeboard_ctx.strokeRect(snakePart.x, snakePart.y, dx_2, dx_2);
+  }
+  else if(i === 1){
+    // Set the colour of the snake part
+    snakeboard_ctx.fillStyle = head_col_2;
+    // Set the border colour of the snake part
+    snakeboard_ctx.strokestyle = head_border_2;
     // Draw a "filled" rectangle to represent the snake part at the coordinates
     // the part is located
     snakeboard_ctx.fillRect(snakePart.x, snakePart.y, dx_2, dx_2);
@@ -301,13 +326,13 @@ function drawFood()
 function get_initial_idx(){
   x_sn = snake[0].x / dx_2;
   y_sn = snake[0].y / dx_2;
-  console.log("SNAKE HEAD: "+ x_sn + " " + y_sn);
+  //console.log("SNAKE HEAD: "+ x_sn + " " + y_sn);
   for (let idx = 0; idx < path.length; idx += 1){
     x_chk = path[idx][0];
     y_chk = path[idx][1];
     //console.log("Checking: " + x_chk + " " + y_chk);
     if(x_chk === x_sn && y_chk === y_sn){
-      console.log(idx);
+      //console.log(idx);
       return idx;
     }
   }
@@ -345,7 +370,7 @@ function set_pop(s){
   return value;
 }
 
-function get_adj_matrix(head_idx, tail_idx){
+function get_adj_matrix(head_idx, tail_idx, food_idx){
 
   var adj_matrix = new Array(num_vert);
 
@@ -360,6 +385,7 @@ function get_adj_matrix(head_idx, tail_idx){
   }
   console.log("HEAD: " + head_idx);
   console.log("TAIL: " + tail_idx);
+  console.log("FOOD: " + food_idx);
 
 
   for(var i = 0; i < num_vert; i += 1){
@@ -367,39 +393,45 @@ function get_adj_matrix(head_idx, tail_idx){
     // Check Left idx
     if(path[i][0] - 1 >= 0){
       j = get_idx(path[i][0] -1, path[i][1]);
-      console.log("LEFT: " + j);
-      if (head_idx < tail_idx && j >= head_idx && j <= tail_idx ){
-        console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
+      //console.log("LEFT: " + j);
+      if (head_idx < tail_idx && j > head_idx && j < tail_idx + (i - head_idx) && j > i ){
+        //console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
         adj_matrix[i][j] = 1;
-      }else if ( head_idx >= tail_idx && j > head_idx || j < tail_idx){
-        console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
+      }else if ( head_idx >= tail_idx && (j > head_idx || j < tail_idx + (i - head_idx)) && j > i){
+        //console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
         adj_matrix[i][j] = 1;
       }
     }
     // Check Right idx
     if(path[i][0] + 1 <= num_cols){
       j = get_idx(path[i][0] + 1, path[i][1]);
-      if (head_idx <= tail_idx && j >= head_idx && j <= tail_idx ){
+      if (head_idx < tail_idx && j > head_idx && j < tail_idx + (i - head_idx) && j > i ){
+        //console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
         adj_matrix[i][j] = 1;
-      }else if ( head_idx > tail_idx && j >= head_idx || j <= tail_idx){
+      }else if ( head_idx >= tail_idx && (j > head_idx || j < tail_idx + (i - head_idx)) ){
+        //console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
         adj_matrix[i][j] = 1;
       }
     }
     // Check Up idx
     if(path[i][1] - 1 >= 0){
       j = get_idx(path[i][0], path[i][1] - 1);
-      if (head_idx <= tail_idx && j >= head_idx && j <= tail_idx ){
+      if (head_idx < tail_idx && j > head_idx && j < tail_idx + (i - head_idx) && j > i ){
+        //console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
         adj_matrix[i][j] = 1;
-      }else if ( head_idx > tail_idx && j >= head_idx || j <= tail_idx){
+      }else if ( head_idx >= tail_idx && (j > head_idx || j < tail_idx + (i - head_idx) ) ){
+        //console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
         adj_matrix[i][j] = 1;
       }
     }
     // Check Down Idx
     if(path[i][1] + 1 <= num_rows){
       j = get_idx(path[i][0], path[i][1] + 1);
-      if (head_idx <= tail_idx && j >= head_idx && j <= tail_idx ){
+      if (head_idx < tail_idx && j > head_idx && j < tail_idx + (i - head_idx) && j > i ){
+        //console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
         adj_matrix[i][j] = 1;
-      }else if ( head_idx > tail_idx && j >= head_idx || j <= tail_idx){
+      }else if ( head_idx >= tail_idx && (j > head_idx || j < tail_idx + (i - head_idx) ) ){
+        //console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
         adj_matrix[i][j] = 1;
       }
     }
@@ -407,6 +439,151 @@ function get_adj_matrix(head_idx, tail_idx){
 
   console.log(adj_matrix);
   return adj_matrix;
+}
+
+function get_adj_matrix_2(head_idx, tail_idx, food_idx){
+
+  var adj_matrix = new Array(num_vert);
+
+  for (var i = 0; i < adj_matrix.length; i++) {
+    adj_matrix[i] = new Array(num_vert);
+  }
+
+  for (var i = 0; i < adj_matrix.length; i++){
+    for (var j = 0; j < adj_matrix[0].length; j++){
+      adj_matrix[i][j] = 0;
+    } 
+  }
+  
+
+
+  count = 0;
+  all_idx = get_all_idx();
+  //console.log(all_idx);
+  new_head = all_idx[0];
+  new_tail = all_idx.slice(-1);
+
+  // console.log("HEAD: " + new_head);
+  // console.log("TAIL: " + new_tail);
+  // console.log("FOOD: " + food_idx);
+
+  changed = 0;
+  next_head = -1;
+  next_tail = -1;
+  next_idx = -1;
+
+  for(var i = 0; i < num_vert; i += 1){
+    // Check Left idx
+    if(path[i][0] - 1 >= 0 && changed == 0){
+      j = get_idx(path[i][0] - 1, path[i][1]);
+      // if(i == head_idx){
+      //   console.log("Left: " + j);
+      //   console.log("New Head: " + new_head);
+      //   console.log("New Tail: " + new_tail);
+      //   console.log(new_head >= new_tail);
+      //   console.log((j > new_head || j < new_tail))
+      //   console.log(j > i);
+      // }
+      
+      if (new_head < new_tail && j > new_head && j < new_tail  && j > i ){
+        //console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+        changed = 1;
+      }else if (new_head >= new_tail && (j > new_head || j < new_tail) && j > i){
+        //console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+        changed = 1;
+      }
+      if(changed && j > next_idx){
+        next_idx = j;
+      }
+    }
+    changed = 0;
+    // Check Right idx
+    if(path[i][0] + 1 <= num_cols && changed == 0 ){
+      j = get_idx(path[i][0] + 1, path[i][1]);
+      // if(i == head_idx){
+      //   console.log("Right: " + j);
+      // }
+      if (new_head < new_tail && j > new_head && j < new_tail  && j > i ){
+        //console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+        changed = 1;
+      }else if (new_head >= new_tail && (j > new_head || j < new_tail) && j > i){
+        //console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+        changed = 1;
+      }
+      if(changed && j > next_idx){
+
+        next_idx = j;
+
+      }
+    }
+    changed = 0;
+    // Check Up idx
+    if(path[i][1] - 1 >= 0 && changed == 0 ){
+      j = get_idx(path[i][0] , path[i][1] - 1);
+      // if(i == head_idx){
+      //   console.log("Up: " + j);
+      // }
+      if (new_head < new_tail && j > new_head && j < new_tail  && j > i ){
+        //console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+        changed = 1;
+      }else if (new_head >= new_tail && (j > new_head || j < new_tail) && j > i){
+        //console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+        changed = 1;
+      }
+      if(changed && j > next_idx){
+
+        next_idx = j;
+
+      }
+    }
+    changed = 0;
+    // Check Down idx
+    if(path[i][1] + 1 <= num_rows  && changed == 0){
+      j = get_idx(path[i][0] , path[i][1] + 1);
+      // if(i == head_idx){
+      //   console.log("Down: " + j);
+      // }
+      if (new_head < new_tail && j > new_head && j < new_tail  && j > i ){
+        //console.log("WENT TO 1: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+        changed = 1;
+      }else if (new_head >= new_tail && (j > new_head || j < new_tail) && j > i){
+        //console.log("WENT TO 2: adj_matrix[" + i + "][" + j + "] = 1");
+        adj_matrix[i][j] = 1;
+        changed = 1;
+      }
+      if(changed && j > next_idx){
+        next_idx = j;
+      }
+    }
+    changed = 0;
+
+    // Updating some loop variables
+    // all_idx.unshift(next_idx);;
+    // all_idx.pop();
+    // new_head = all_idx[0];
+    // new_tail = all_idx.splice(-1);
+
+  }
+
+  //console.log(adj_matrix);
+  return adj_matrix;
+}
+
+function get_all_idx(){
+  all_idx = [];
+  for(var i = 0; i < snake.length; i += 1){
+    idx = get_idx(snake[i].x / dx_2, snake[i].y / dx_2);
+    all_idx.push(idx);
+  }
+
+  return all_idx;
 }
 
 function find_path(head_idx, tail_idx, food_idx){
@@ -422,7 +599,7 @@ function find_path(head_idx, tail_idx, food_idx){
     }
   }
 
-  adj_matrix = get_adj_matrix(head_idx, tail_idx);
+  adj_matrix = get_adj_matrix_2(head_idx, tail_idx, food_idx);
 
   // Need to keep track of vertices included in the shortest-path tree
   let spts = new ObjectSet();
@@ -435,6 +612,12 @@ function find_path(head_idx, tail_idx, food_idx){
 
   // Parent array to store shortest path tree
   var parents = new Array(num_vert);
+
+  // Indexes of the snake
+  all_idx = get_all_idx();
+  new_head = all_idx[0];
+  new_tail = all_idx.splice(-1);
+
 
   for (var i = 0; i < distances.length; i++) {
     // directions[i] = new Array(num_vert);
@@ -456,19 +639,53 @@ function find_path(head_idx, tail_idx, food_idx){
   distances[head_idx] = 0;
 
   // Set source parent to -1, because starting vertex does not have parent
-  //parents[]
+  parents[head_idx] = -1;
 
-  // Make it impossible to go through the body by only allowing x > head_idx and x < tail_idx
-  for(var i = tail_idx; i < head_idx; i += 1){
-    spts.add(path[i]);
+  // Find shortest path for all verticies:
+  for(var i = 1; i < num_vert; i += 1){
+    //console.log("i: " + i);
+    nearest_idx = -1;
+    shortest_dist = 50000
+
+    for(var vi = 0; vi < num_vert; vi +=1 ){
+      if(!(added[vi]) && distances[vi] < shortest_dist){
+        nearest_idx = vi;
+        //console.log("Updating Shortest distance[" + vi + "] = " + distances[vi]);
+        shortest_dist = distances[vi];
+      }
+    }
+    if(nearest_idx != -1){
+      added[nearest_idx] = true;
+      all_idx.unshift(nearest_idx);
+      all_idx.pop();
+      new_head = all_idx[0];
+      new_tail = all_idx.splice(-1);
+      adj_matrix = get_adj_matrix_2(new_head, new_tail, food_idx);
+      //console.log("nearest_idx: " + nearest_idx);
+      //console.log("Shortest distance: " + shortest_dist);
+    }else{
+      continue;
+    }
+    
+    
+    for(var vi = 0; vi < num_vert; vi += 1){
+      
+      //console.log("vi: " + vi);
+      dist = adj_matrix[nearest_idx][vi];
+
+      if(dist > 0 && (shortest_dist + dist) < distances[vi]){
+        //console.log("Dist: " + dist);
+        //console.log("Shortest Dist: " + shortest_dist);
+        distances[vi] = shortest_dist + dist;
+        //console.log("Updating distances[" + vi + "] = " + distances[vi]);
+        parents[vi] = nearest_idx;
+      }
+    }
   }
-  // Add the source to the shortest path tree
-  spts.add(path[head_idx]);
-
-  head_x = path[head_idx][0];
-  head_y = path[head_idx][1];
-
-  food_idx = get_idx(food_x / dx_2, food_y / dx_2);
+  //console.log(distances);
+  //console.log(parents);
+  return [distances, parents];
+  //print_solution(head_idx, distances, parents);
 
   // Recursive function that goes through all verticies
   // tree = []
@@ -479,11 +696,46 @@ function find_path(head_idx, tail_idx, food_idx){
 
 }
 
+// Took a lot from: https://www.geeksforgeeks.org/printing-paths-dijkstras-shortest-path-algorithm/
+function print_solution(start_vertex, distances, parents){
+  nVert = distances.length;
+
+  for(var vi = 0; vi < nVert; vi += 1){
+    if (vi != start_vertex){
+      console.log("\n" + start_vertex + " -> " + vi + "\t\tDistance: " + distances[vi]);
+      //console.log(vi + " \t\t ");
+      //console.log(distances[vi] + "\t\t");
+      printPath(vi, parents);
+    }
+  }
+}
+
+function printPath(currentVertex, parents){
+  if (currentVertex === -1){
+    return;
+  }
+  printPath(parents[currentVertex], parents);
+  console.log(currentVertex + " ");
+}
+
+function get_next_idx(parents, cur_idx, head_idx, iteration){
+  //console.log("Current Index: " + cur_idx);
+  if (parents[cur_idx] === head_idx){
+    //console.log("Returning: " + cur_idx);
+    return cur_idx;
+  }
+  if(iteration == 30){
+    console.log("Iteration Limit: " + cur_idx + " at iteration " + iteration);
+    return cur_idx;
+  }
+  return get_next_idx(parents, parents[cur_idx], head_idx, iteration + 1);
+}
+
 function move_snake() {
 
   // New move snake logic using the hamiltonian path
   // Get next coordinate using cur_idx
-  if(score > .5 * (num_vert*10 - init_length*10)){
+  if( follow_path === 1 || score > .7 * (num_vert*10 - init_length*10)){
     next_pos = path[(cur_idx+1)%(num_vert)];
   }else{
     //console.log("Food idx: " + get_idx(food_x / dx_2, food_y / dx_2));
@@ -497,14 +749,38 @@ function move_snake() {
     // console.log("Head idx: " + head_idx);
     // console.log("Food idx: " + food_idx);
     // console.log("Distance to Food: " + dist_to_food);
-    find_path(head_idx, tail_idx, food_idx);
+    total = find_path(head_idx, tail_idx, food_idx);
+    distances = total[0];
+    parents = total[1];
 
-    next_pos = path[(cur_idx+1)%(num_vert)];
+    // new_idx = get_next_idx(parents, food_idx, head_idx, 0);
+    // console.log("New idx: " + new_idx);
+    // console.log(distances);
+    // next_pos = path[new_idx];
+
+    if(distances[food_idx] < dist_to_food){
+      new_idx = get_next_idx(parents, food_idx, head_idx, 0);
+      console.log("New idx: " + new_idx);
+      next_pos = path[new_idx];
+    }else{
+      // new_idx = get_next_idx(parents, food_idx, head_idx, 0);
+      // console.log("New idx: " + new_idx);
+      // next_pos = path[new_idx];
+      console.log("Using normal hamiltonian Path");
+      next_pos = path[(cur_idx+1)%(num_vert)];
+    }   
+    console.log(distances);
+    console.log(parents);
   }
+
   
   //console.log(next_pos);
   const head = {x: next_pos[0]*dx_2, y: next_pos[1]*dx_2};
-  cur_idx = (cur_idx+1)%(num_vert);
+  head_idx = get_idx(next_pos[0], next_pos[1])
+  console.log("Moving head to " + head_idx);
+  //console.log("Moving head to pos: " + next_pos);
+  //cur_idx = (cur_idx+1)%(num_vert);
+  
   // Create the new Snake's head
   //const head = {x: snake[0].x + dx, y: snake[0].y + dy};
   // Add the new head to the beginning of snake body
@@ -521,6 +797,7 @@ function move_snake() {
     // Remove the last part of snake body
     snake.pop();
   }
+  cur_idx = get_initial_idx();
 }
 
 //found from https://stackoverflow.com/questions/11735856/draw-a-grid-on-an-html-5-canvas-element
