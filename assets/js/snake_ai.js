@@ -724,9 +724,9 @@ function get_next_idx(parents, cur_idx, head_idx, iteration){
     //console.log("Returning: " + cur_idx);
     return cur_idx;
   }
-  if(iteration == num_vert){
+  if(iteration === num_vert){
     console.log("Iteration Limit: " + cur_idx + " at iteration " + iteration);
-    return cur_idx;
+    return -1;
   }
   return get_next_idx(parents, parents[cur_idx], head_idx, iteration + 1);
 }
@@ -762,13 +762,33 @@ function move_snake() {
       new_idx = get_next_idx(parents, food_idx, head_idx, 0);
       console.log("New idx: " + new_idx);
       next_pos = path[new_idx];
-    }else{
+    }else if (head_idx != num_vert - 1 && head_idx > food_idx){
+      
+      
+      reset_idx = num_vert - 1;
+      //console.log("Heading to: " + reset_idx );
+      //console.log("HEAD Idx: " + head_idx);
+      total = find_path(head_idx, tail_idx, reset_idx);
+      distances = total[0];
+      parents = total[1];
+      new_idx = get_next_idx(parents, reset_idx, head_idx, 0);
+      if(new_idx != -1){
+        console.log("Heading towards 0 again");
+        next_pos = path[new_idx];
+      }else{
+        console.log("Using normal hamiltonian Path because of bug");
+        next_pos = path[(cur_idx+1)%(num_vert)];
+      }
+      
       // new_idx = get_next_idx(parents, food_idx, head_idx, 0);
       // console.log("New idx: " + new_idx);
       // next_pos = path[new_idx];
+      // console.log("Using normal hamiltonian Path");
+      // next_pos = path[(cur_idx+1)%(num_vert)];
+    } else{
       console.log("Using normal hamiltonian Path");
       next_pos = path[(cur_idx+1)%(num_vert)];
-    }   
+    } 
     console.log(distances);
     console.log(parents);
   }
